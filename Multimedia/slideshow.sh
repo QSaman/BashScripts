@@ -4,6 +4,7 @@
 
 delay=10
 criteria="rating=10"
+rating="10"
 dirPath="."
 viewerName="feh"
 balooBug="0"
@@ -26,7 +27,9 @@ function showUsage
     echo "                      Supported image viewers: feh, sxiv"
     echo "                      Note that feh unable to show multiple-frames images like most gifts. On the other hand sxiv can do that."
     echo "                      Supported video players: mpv"
-    echo "-b, --bug             At the moment baloo has a bug and doesn't recognize some vide types like wmv. Use this to temporary solve it."
+    echo "-b, --bug [type]      Atemporary solutions for some of baloo bugs. type can be the following values"
+    echo "                      video: baloo doesn't recognize some vide types like wmv. Use this to temporary solve it."
+    echo "                      rating: baloo doesn't handle >= or <= correctly. It only handle = correctly. Use this to solve it."
     echo "-i, --input           Read the list of files from images.txt or movies.txt depends on the software. See --software"
     echo "-w, --write           Write the list of files into images.txt or movies.txt depends on the software. See --software"
     exit 0
@@ -46,6 +49,7 @@ do
                 showUsage
             fi
             criteria="rating>=${2}"
+            rating="${2}"
             shift 2
             ;;
         -c|--criteria)
@@ -82,7 +86,13 @@ do
             ;;
         -b|--baloo-bug)
             balooBug="1"
-            shift
+            balooBugType="$2"
+            if [ "$balooBugType" != "video" ] && [ "$balooBugType" != "rating" ]
+            then
+                echo "Unrecognized bug $balooBugType type"
+                showUsage
+            fi
+            shift 2
             ;;
         -i|--input)
             readFile="1"
@@ -102,6 +112,25 @@ done
 function runMpvAndHandlBalooVideoBug
 {
     mpv --shuffle --playlist <(cat <(baloosearch -d"$dirPath" -t Video "${criteria}" | sed \$d) <(baloosearch -d"$dirPath" "${criteria}" | egrep -i '\.wmv$|\.mkv$'))
+}
+
+function handleRatingBug
+{
+    if [ $balooBug -eq 1 ] && [ "$balooBugType" = "rating" ]
+    then
+        criteria=""
+        local first=1
+        for (( i=${rating}; i<=10; i++ ))
+        do
+            if [ $first -eq 1 ]
+            then
+                first=0
+            else
+                criteria="$criteria OR "
+            fi
+            criteria="${criteria}rating=${i}"
+        done
+    fi
 }
 
 function runMpv
@@ -129,7 +158,7 @@ function mpvHandler
         exit 0
     fi
     
-    if [ $balooBug -eq 1 ]
+    if [ $balooBug -eq 1 ] && [ "$balooBugType" = "video" ]
     then
         runMpvAndHandlBalooVideoBug
     else
@@ -177,6 +206,8 @@ then
     echo "You cannot use both read file and write file"
     showUsage
 fi
+
+handleRatingBug
 
 if [ "$viewerName" = "feh" ]
 then
