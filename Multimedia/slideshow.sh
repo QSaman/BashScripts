@@ -7,6 +7,9 @@ criteria="rating=10"
 dirPath="."
 viewerName="feh"
 balooBug="0"
+writeFile="0"
+readFile="0"
+filePath=""
 
 function showUsage
 {
@@ -24,6 +27,8 @@ function showUsage
     echo "                      Note that feh unable to show multiple-frames images like most gifts. On the other hand sxiv can do that."
     echo "                      Supported video players: mpv"
     echo "-b, --bug             At the moment baloo has a bug and doesn't recognize some vide types like wmv. Use this to temporary solve it."
+    echo "-i, --input           Read the list of files from images.txt or movies.txt depends on the software. See --software"
+    echo "-w, --write           Write the list of files into images.txt or movies.txt depends on the software. See --software"
     exit 0
 }
 
@@ -79,6 +84,14 @@ do
             balooBug="1"
             shift
             ;;
+        -i|--input)
+            readFile="1"
+            shift
+            ;;
+        -w|--write)
+            writeFile="1"
+            shift
+            ;;
         *)
             showUsage
             ;;
@@ -103,6 +116,16 @@ function runMpvOldMethod
 
 function mpvHandler
 {
+    if [ $writeFile -eq 1 ]
+    then
+        baloosearch -d"$dirPath" -t video "${criteria}" > movies.txt
+        exit 0
+    elif [ $readFile -eq 1 ]
+    then
+        mpv --shuffle --playlist=movies.txt
+        exit 0
+    fi
+    
     if [ $balooBug -eq 1 ]
     then
         runMpvAndHandlBalooVideoBug
@@ -111,16 +134,51 @@ function mpvHandler
     fi
 }
 
+function sxivHandler
+{
+    if [ $writeFile -eq 1 ]
+    then
+        baloosearch -d"$dirPath" -t image "${criteria}" > images.txt
+        exit 0
+    elif [ $readFile -eq 1 ]
+    then
+        cat images | sort --random-sort | sxiv -a -b -f -i -S $delay -sf
+        exit 0
+    fi
+    baloosearch -d"$dirPath" -t image "${criteria}" | sort --random-sort | sxiv -a -b -f -i -S $delay -sf
+}
+
+function fehHandler
+{
+    if [ $writeFile -eq 1 ]
+    then
+        baloosearch -d"$dirPath" -t image "${criteria}" > images.txt
+        exit 0
+    elif [ $readFile -eq 1 ]
+    then
+        feh -F -D $delay -Z -z -Y -f images.txt
+        exit 0
+    fi
+    
+    baloosearch -d"$dirPath" -t image "${criteria}" |  feh -F -D $delay -Z -z -Y -f -
+}
+
+if [ $writeFile -eq 1 ] && [ $readFile -eq 1 ]
+then
+    echo "You cannot use both read file and write file"
+    showUsage
+fi
+
 if [ "$viewerName" = "feh" ]
 then
-    baloosearch -d"$dirPath" -t image "${criteria}" |  feh -F -D $delay -Z -z -Y -f -
+    fehHandler
 elif [ "$viewerName" = "sxiv" ]
 then
-    baloosearch -d"$dirPath" -t image "${criteria}" | sxiv -a -b -f -i -S $delay -sf
+    sxivHandler
 elif [ "$viewerName" = "mpv" ]
 then
     mpvHandler
 else
-    echo "Unsupported viewer $viewerName"
+    echo "Unsupported software $viewerName"
     showUsage
 fi
