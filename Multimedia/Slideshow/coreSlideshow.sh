@@ -10,7 +10,7 @@ viewerName="feh"
 balooBug="0"
 writeFile="0"
 readFile="0"
-filePath=""
+slideshowType="image"
 
 function showUsage
 {
@@ -82,6 +82,10 @@ do
             then
                 showUsage
             fi
+            if [ "$viewerName" = "mpv" ]
+            then
+                slideshowType="video"
+            fi
             shift 2
             ;;
         -b|--baloo-bug)
@@ -111,7 +115,7 @@ done
 #At the moment baloo has a bug and doesn't recognize some vide types like wmv. The following function is a temporary solution:
 function runMpvAndHandlBalooVideoBug
 {
-    mpv --shuffle --playlist <(cat <(baloosearch -d"$dirPath" -t Video "${criteria}" | sed \$d) <(baloosearch -d"$dirPath" "${criteria}" | egrep -i '\.wmv$|\.mkv$'))
+    mpv --shuffle --playlist <(cat <(eval $balooCommand) <(eval $balooCommand | egrep -i '\.wmv$|\.mkv$'))
 }
 
 function handleRatingBug
@@ -135,12 +139,12 @@ function handleRatingBug
 
 function runMpv
 {
-    mpv --shuffle --playlist <(baloosearch -d"$dirPath" -t video "${criteria}" | sed \$d)
+    mpv --shuffle --playlist <(eval $balooCommand)
 }
 
 function runMpvOldMethod
 {
-    baloosearch -d"$dirPath" -t video "${criteria}" | sed \$d | mpv --shuffle --playlist=/dev/fd/3 3<&0 < /dev/tty
+    eval $balooCommand | mpv --shuffle --playlist=/dev/fd/3 3<&0 < /dev/tty
 }
 
 function mpvHandler
@@ -150,7 +154,7 @@ function mpvHandler
         #By realpath I convert absolute path to relative path
         #xargs can handle whitespaces in file name but it requires all paths are null-terminated so I've used tr '\n' '\0'
         #sed \$d remove the last line which is elapsed time by baloosearch
-        baloosearch -d"$dirPath" -t video "${criteria}" | tr '\n' '\0' | xargs -0 realpath --relative-to=`pwd` | sed \$d > movies.txt
+        eval $balooCommand | tr '\n' '\0' | xargs -0 realpath --relative-to=`pwd` | sed \$d > movies.txt
         exit 0
     elif [ $readFile -eq 1 ]
     then
@@ -173,14 +177,14 @@ function sxivHandler
         #By realpath I convert absolute path to relative path
         #xargs can handle whitespaces in file name but it requires all paths are null-terminated so I've used tr '\n' '\0'
         #sed \$d remove the last line which is elapsed time by baloosearch
-        baloosearch -d"$dirPath" -t image "${criteria}" | tr '\n' '\0' | xargs -0 realpath --relative-to=`pwd` | sed \$d > images.txt
+        eval $balooCommand | tr '\n' '\0' | xargs -0 realpath --relative-to=`pwd` | sed \$d > images.txt
         exit 0
     elif [ $readFile -eq 1 ]
     then
         cat images.txt | sort --random-sort | sxiv -a -b -f -i -S $delay -sf
         exit 0
     fi
-    baloosearch -d"$dirPath" -t image "${criteria}" | sed \$d | sort --random-sort | sxiv -a -b -f -i -S $delay -sf
+    eval $balooCommand | sort --random-sort | sxiv -a -b -f -i -S $delay -sf
 }
 
 function fehHandler
@@ -190,15 +194,15 @@ function fehHandler
         #By realpath I convert absolute path to relative path
         #xargs can handle whitespaces in file name but it requires all paths are null-terminated so I've used tr '\n' '\0'
         #sed \$d remove the last line which is elapsed time by baloosearch
-        baloosearch -d"$dirPath" -t image "${criteria}" | tr '\n' '\0' | xargs -0 realpath --relative-to=`pwd` | sed \$d > images.txt
+        eval $balooCommand | tr '\n' '\0' | xargs -0 realpath --relative-to=`pwd` | sed \$d > images.txt
         exit 0
     elif [ $readFile -eq 1 ]
     then
         feh -F -D $delay -Z -z -Y -f images.txt
         exit 0
     fi
-    
-    baloosearch -d"$dirPath" -t image "${criteria}" | sed \$d |  feh -F -D $delay -Z -z -Y -f -
+
+    eval $balooCommand |  feh -F -D $delay -Z -z -Y -f -
 }
 
 if [ $writeFile -eq 1 ] && [ $readFile -eq 1 ]
@@ -208,6 +212,9 @@ then
 fi
 
 handleRatingBug
+
+#e.g. baloosearch -d"$dirPath" -t ${slideshowType} "${criteria}" | sed \$d
+balooCommand="baloosearch -d\"$dirPath\" -t ${slideshowType} \"${criteria}\" | sed \\\$d"
 
 if [ "$viewerName" = "feh" ]
 then
