@@ -1,0 +1,17 @@
+[Unit]
+#Copy this to /etc/systemd/system/rtorrent.service
+Description=rTorrent Daemon
+Requires=network.target local-fs.target
+
+[Service]
+Type=forking
+KillMode=none
+User=saman
+ExecStart=/usr/bin/tmux new-session -c /media/NixHddData/MyStuff/Downloads/Torrents/rTorrent -s rtorrent -n rtorrent -d rtorrent 
+ExecStartPost=/usr/bin/tmux send-keys -t rtorrent C-x d.multicall=,d.start= Enter
+ExecStop=/usr/bin/tmux send-keys -t rtorrent C-q && /usr/bin/tmux kill-session -t rtorrent
+WorkingDirectory=/home/saman/
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
