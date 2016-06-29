@@ -35,6 +35,7 @@ function showUsage
     echo "                      rating: baloo doesn't handle >= or <= correctly. It only handle = correctly. Use this to solve it."
     echo "-i, --input           Read the list of files from images.txt or movies.txt depends on the software. See --software"
     echo "-w, --write           Write the list of files into images.txt or movies.txt depends on the software. See --software"
+    echo "-l, --link            Generate soft links in imageSelection or moviesSelection depending on software. See --software"
     exit 0
 }
 
