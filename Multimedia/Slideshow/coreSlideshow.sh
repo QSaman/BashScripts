@@ -5,7 +5,6 @@
 delay=10
 criteria="rating=10"
 rating="10"
-dirPath="."
 viewerName="feh"
 balooBug="0"
 writeFile="0"
@@ -21,6 +20,7 @@ function showUsage
     echo "-r, --rating:         Minimum rating: e.g. -r 8 means rating>=8. The default is rating=10."
     echo "-c, --criteria:       Criteria: e.g. -c rating=9. The default is rating=10."
     echo "-p, --path:           Path to the root directory to show images. The default is the current directory (.)."
+    echo "                      You can choose multiple --path. In this case, The result is the union of all paths."
     echo "-d, --delay:          Delay for slideshow. The default is 10s."
     echo "                      Note that you can use delay when you've chosen an image viewer."
     echo "-s, --software:       Image viewer or video player." 
@@ -61,8 +61,8 @@ do
             shift 2
             ;;
         -p|--path)
-            dirPath="$2"
-            if [ "$dirPath" = "" ]
+            dirPath=("${dirPath[@]}" "$2")
+            if [ "$2" = "" ]
             then
                 showUsage
             fi
@@ -111,6 +111,26 @@ do
             ;;
     esac
 done
+
+function buildBalooCommand
+{
+    if [ ${#dirPath[@]} -eq 0 ]
+    then
+        dirPath[0]="."
+    fi
+    if [ ${#dirPath[@]} -eq 1 ]
+    then
+        #e.g. baloosearch -d"$dirPath" -t ${slideshowType} "${criteria}" | sed \$d
+        balooCommand="baloosearch -d\"${dirPath[0]}\" -t ${slideshowType} \"${criteria}\" | sed \\\$d"
+    else
+        balooCommand="{"
+        for (( i=0; i < ${#dirPath[@]}; ++i ))
+        do
+            balooCommand="$balooCommand baloosearch -d\"${dirPath[$i]}\" -t ${slideshowType} \"${criteria}\" | sed \\\$d;"
+        done
+        balooCommand="$balooCommand }"
+    fi
+}
 
 #At the moment baloo has a bug and doesn't recognize some vide types like wmv. The following function is a temporary solution:
 function runMpvAndHandlBalooVideoBug
@@ -213,8 +233,7 @@ fi
 
 handleRatingBug
 
-#e.g. baloosearch -d"$dirPath" -t ${slideshowType} "${criteria}" | sed \$d
-balooCommand="baloosearch -d\"$dirPath\" -t ${slideshowType} \"${criteria}\" | sed \\\$d"
+buildBalooCommand
 
 if [ "$viewerName" = "feh" ]
 then
