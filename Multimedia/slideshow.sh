@@ -1,2 +1,3 @@
 #!/bin/bash
-slideshowCore.sh -b rating $@
+
+coreSlideshow.sh -b rating $@

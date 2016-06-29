@@ -1,3 +1,3 @@
 #!/bin/bash
 
-slideshowCore.sh -s mpv $@
+coreSlideshow.sh -s mpv $@
