@@ -8,8 +8,11 @@ rating="10"
 viewerName="feh"
 balooBug="0"
 writeFile="0"
+linkFiles="0"
 readFile="0"
 slideshowType="image"
+softLinkDir="imageSelection"
+fileList="images.txt"
 
 function showUsage
 {
@@ -85,6 +88,8 @@ do
             if [ "$viewerName" = "mpv" ]
             then
                 slideshowType="video"
+                fileList="movies.txt"
+                softLinkDir="moviesSelection"
             fi
             shift 2
             ;;
@@ -104,6 +109,10 @@ do
             ;;
         -w|--write)
             writeFile="1"
+            shift
+            ;;
+        -l|--link)
+            linkFiles="1"
             shift
             ;;
         *)
@@ -169,14 +178,7 @@ function runMpvOldMethod
 
 function mpvHandler
 {
-    if [ $writeFile -eq 1 ]
-    then
-        #By realpath I convert absolute path to relative path
-        #xargs can handle whitespaces in file name but it requires all paths are null-terminated so I've used tr '\n' '\0'
-        #sed \$d remove the last line which is elapsed time by baloosearch
-        eval $balooCommand | tr '\n' '\0' | xargs -0 realpath --relative-to=`pwd` | sed \$d > movies.txt
-        exit 0
-    elif [ $readFile -eq 1 ]
+    if [ $readFile -eq 1 ]
     then
         mpv --shuffle --playlist=movies.txt
         exit 0
@@ -192,14 +194,7 @@ function mpvHandler
 
 function sxivHandler
 {
-    if [ $writeFile -eq 1 ]
-    then
-        #By realpath I convert absolute path to relative path
-        #xargs can handle whitespaces in file name but it requires all paths are null-terminated so I've used tr '\n' '\0'
-        #sed \$d remove the last line which is elapsed time by baloosearch
-        eval $balooCommand | tr '\n' '\0' | xargs -0 realpath --relative-to=`pwd` | sed \$d > images.txt
-        exit 0
-    elif [ $readFile -eq 1 ]
+    if [ $readFile -eq 1 ]
     then
         cat images.txt | sort --random-sort | sxiv -a -b -f -i -S $delay -sf
         exit 0
@@ -209,20 +204,41 @@ function sxivHandler
 
 function fehHandler
 {
-    if [ $writeFile -eq 1 ]
-    then
-        #By realpath I convert absolute path to relative path
-        #xargs can handle whitespaces in file name but it requires all paths are null-terminated so I've used tr '\n' '\0'
-        #sed \$d remove the last line which is elapsed time by baloosearch
-        eval $balooCommand | tr '\n' '\0' | xargs -0 realpath --relative-to=`pwd` | sed \$d > images.txt
-        exit 0
-    elif [ $readFile -eq 1 ]
+    if [ $readFile -eq 1 ]
     then
         feh -F -D $delay -Z -z -Y -f images.txt
         exit 0
     fi
 
     eval $balooCommand |  feh -F -D $delay -Z -z -Y -f -
+}
+
+function checkGenerateFileList
+{
+    if [ $writeFile -eq 1 ]
+    then
+        #By realpath I convert absolute path to relative path
+        #xargs can handle whitespaces in file name but it requires all paths are null-terminated so I've used tr '\n' '\0'
+        #sed \$d remove the last line which is elapsed time by baloosearch
+        eval $balooCommand | tr '\n' '\0' | xargs -0 realpath --relative-to="`pwd`" > "$fileList"
+        exit 0
+    fi
+}
+
+function checkGeneratingSoftLinks
+{
+    if [ $linkFiles -eq 1 ]
+    then
+        mkdir $softLinkDir
+        if [ $? -ne 0 ]
+        then
+            echo "Problem in making $softLinkDir. I don't have write permission or directory exist"
+            exit 1
+        fi
+        #eval $balooCommand | tr '\n' '\0' | xargs -0 realpath --relative-to="`pwd`/${softLinkDir}" | tr '\n' '\0' | xargs -0 -I target ln -s target ./${softLinkDir}
+        eval $balooCommand | tr '\n' '\0' | xargs -0 ln -s -r -t ./${softLinkDir}
+        exit 0
+    fi
 }
 
 if [ $writeFile -eq 1 ] && [ $readFile -eq 1 ]
@@ -234,6 +250,9 @@ fi
 handleRatingBug
 
 buildBalooCommand
+
+checkGenerateFileList
+checkGeneratingSoftLinks
 
 if [ "$viewerName" = "feh" ]
 then
