@@ -1,3 +1,3 @@
 #!/bin/bash
 
-slideshow.sh -v sxiv $@
+slideshow.sh -s sxiv $@
