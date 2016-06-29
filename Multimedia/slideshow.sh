@@ -148,7 +148,7 @@ function sxivHandler
         exit 0
     elif [ $readFile -eq 1 ]
     then
-        cat images | sort --random-sort | sxiv -a -b -f -i -S $delay -sf
+        cat images.txt | sort --random-sort | sxiv -a -b -f -i -S $delay -sf
         exit 0
     fi
     baloosearch -d"$dirPath" -t image "${criteria}" | sed \$d | sort --random-sort | sxiv -a -b -f -i -S $delay -sf
