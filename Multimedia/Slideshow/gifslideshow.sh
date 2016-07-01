@@ -1,3 +1,3 @@
 #!/bin/bash
 
-coreSlideshow.sh -s sxiv "$@"
+coreSlideshow.sh -s sxiv -b rating "$@"
