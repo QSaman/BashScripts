@@ -13,6 +13,7 @@ readFile="0"
 slideshowType="image"
 softLinkDir="imageSelection"
 fileList="images.txt"
+customCriteria=0
 
 function showUsage
 {
@@ -58,6 +59,7 @@ do
             ;;
         -c|--criteria)
             criteria="${2}"
+            customCriteria=1
             if [ "$2" = "" ]
             then
                 showUsage
@@ -151,7 +153,7 @@ function runMpvAndHandlBalooVideoBug
 
 function handleRatingBug
 {
-    if [ $balooBug -eq 1 ] && [ "$balooBugType" = "rating" ]
+    if [ $balooBug -eq 1 ] && [ "$balooBugType" = "rating" ] && [ $customCriteria -ne 1 ]
     then
         criteria=""
         local first=1
