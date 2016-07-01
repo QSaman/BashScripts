@@ -3,7 +3,7 @@
 #The requirement for this script is baloo and feh and/or sxiv and/or mpv
 
 delay=10
-criteria="rating=10"
+criteria=""
 rating="10"
 viewerName="feh"
 balooBug="0"
@@ -22,7 +22,7 @@ function showUsage
     echo "Options:"
     echo "-h, --help:           Show this help"
     echo "-r, --rating:         Minimum rating: e.g. -r 8 means rating>=8. The default is rating=10."
-    echo "-c, --criteria:       Criteria: e.g. -c rating=9. The default is rating=10."
+    echo "-c, --criteria:       Criteria: e.g. -c rating=9. The default is rating=10. If you use multiple --criteria the result is logical And of all of them."
     echo "-p, --path:           Path to the root directory to show images. The default is the current directory (.)."
     echo "                      You can choose multiple --path. In this case, The result is the union of all paths."
     echo "-d, --delay:          Delay for slideshow. The default is 10s."
@@ -53,12 +53,16 @@ do
             then
                 showUsage
             fi
-            criteria="rating>=${2}"
             rating="${2}"
             shift 2
             ;;
         -c|--criteria)
-            criteria="${2}"
+            if [ "$criteria" != "" ]
+            then
+                criteria="(${criteria}) AND (${2})"
+            else
+                criteria="${2}"
+            fi
             customCriteria=1
             if [ "$2" = "" ]
             then
@@ -151,11 +155,16 @@ function runMpvAndHandlBalooVideoBug
     mpv --shuffle --playlist <(cat <(eval $balooCommand) <(eval $balooCommand | egrep -i '\.wmv$|\.mkv$'))
 }
 
-function handleRatingBug
+function setCriteira
 {
-    if [ $balooBug -eq 1 ] && [ "$balooBugType" = "rating" ] && [ $customCriteria -ne 1 ]
+    if [ "$criteria" != "" ]
     then
-        criteria=""
+        criteria="(${criteria}) AND ("
+    else
+        criteria="("
+    fi
+    if [ $balooBug -eq 1 ] && [ "$balooBugType" = "rating" ]
+    then    
         local first=1
         for (( i=${rating}; i<=10; i++ ))
         do
@@ -167,6 +176,9 @@ function handleRatingBug
             fi
             criteria="${criteria}rating=${i}"
         done
+        criteria="${criteria})"
+    else
+        criteria="${criteria}rating>=${rating})"
     fi
 }
 
@@ -251,7 +263,7 @@ then
     showUsage
 fi
 
-handleRatingBug
+setCriteira
 
 buildBalooCommand
 
