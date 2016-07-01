@@ -140,6 +140,7 @@ function buildBalooCommand
         done
         balooCommand="$balooCommand }"
     fi
+    balooCommand="$balooCommand | sort --random-sort"
 }
 
 #At the moment baloo has a bug and doesn't recognize some vide types like wmv. The following function is a temporary solution:
