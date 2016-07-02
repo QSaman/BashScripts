@@ -14,6 +14,7 @@ slideshowType="image"
 softLinkDir="imageSelection"
 fileList="images.txt"
 customCriteria=0
+uniqueCriteria=0
 
 function showUsage
 {
@@ -23,6 +24,7 @@ function showUsage
     echo "-h, --help:           Show this help"
     echo "-r, --rating:         Minimum rating: e.g. -r 8 means rating>=8. The default is rating=10."
     echo "-c, --criteria:       Criteria: e.g. -c rating=9. The default is rating=10. If you use multiple --criteria the result is logical And of all of them."
+    echo "-C, --unique-Criteria Like --criteria but don't consider --rating. In other words, you are responsible for all criteria."
     echo "-p, --path:           Path to the root directory to show images. The default is the current directory (.)."
     echo "                      You can choose multiple --path. In this case, The result is the union of all paths."
     echo "-d, --delay:          Delay for slideshow. The default is 10s."
@@ -64,6 +66,15 @@ do
                 criteria="${2}"
             fi
             customCriteria=1
+            if [ "$2" = "" ]
+            then
+                showUsage
+            fi
+            shift 2
+            ;;
+        -C|--unique-criteria)
+            uniqueCriteria=1
+            criteria="$2"
             if [ "$2" = "" ]
             then
                 showUsage
@@ -263,7 +274,11 @@ then
     showUsage
 fi
 
-setCriteira
+if [ $uniqueCriteria -ne 1 ]
+then
+    setCriteira
+fi
+echo $criteria
 
 buildBalooCommand
 
