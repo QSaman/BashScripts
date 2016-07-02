@@ -278,7 +278,7 @@ if [ $uniqueCriteria -ne 1 ]
 then
     setCriteira
 fi
-echo $criteria
+
 
 buildBalooCommand
 
