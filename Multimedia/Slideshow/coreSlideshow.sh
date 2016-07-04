@@ -247,6 +247,8 @@ function checkGenerateFileList
         #By realpath I convert absolute path to relative path
         #xargs can handle whitespaces in file name but it requires all paths are null-terminated so I've used tr '\n' '\0'
         #sed \$d remove the last line which is elapsed time by baloosearch
+        #You can also use the following command but the former is prefered:
+        #eval $balooCommand | xargs -d '\n' realpath --relative-to="`pwd`" > "$fileList"
         eval $balooCommand | tr '\n' '\0' | xargs -0 realpath --relative-to="`pwd`" > "$fileList"
         exit 0
     fi
