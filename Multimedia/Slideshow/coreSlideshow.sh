@@ -265,7 +265,21 @@ function checkGeneratingSoftLinks
             exit 1
         fi
         #eval $balooCommand | tr '\n' '\0' | xargs -0 realpath --relative-to="`pwd`/${softLinkDir}" | tr '\n' '\0' | xargs -0 -I target ln -s target ./${softLinkDir}
-        eval $balooCommand | tr '\n' '\0' | xargs -0 ln -s -r -t ./${softLinkDir}
+        eval $balooCommand | tr '\n' '\0' | xargs -0 ln -s -r --backup=numbered -t ./${softLinkDir}
+        oldIFS="$IFS"
+        IFS=$'\n'
+        for i in $(find -L ./${softLinkDir} -type f -iname '*~')
+        do            
+            filename=$(basename "$i")
+            number="${filename##*.}"
+            number="${number:1:${#number} - 2}"
+            filename="${filename%.*}"
+            extension="${filename##*.}"
+            filename="${filename%.*}"
+            filename="${filename}-${number}.${extension}"            
+            mv "$i" "./${softLinkDir}/$filename"
+        done
+        IFS="$oldIFS"        
         exit 0
     fi
 }
