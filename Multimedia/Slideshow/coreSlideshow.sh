@@ -259,17 +259,17 @@ function checkGeneratingSoftLinks
 {
     if [ $linkFiles -eq 1 ]
     then
-        mkdir $softLinkDir
+        mkdir "$softLinkDir"
         if [ $? -ne 0 ]
         then
             echo "Problem in making $softLinkDir. I don't have write permission or directory exist"
             exit 1
         fi
         #eval $balooCommand | tr '\n' '\0' | xargs -0 realpath --relative-to="`pwd`${softLinkDir}" | tr '\n' '\0' | xargs -0 -I target ln -s target ${softLinkDir}
-        eval $balooCommand | tr '\n' '\0' | xargs -0 ln -s -r --backup=numbered -t ${softLinkDir}
+        eval $balooCommand | tr '\n' '\0' | xargs -0 ln -s -r --backup=numbered -t "${softLinkDir}"
         oldIFS="$IFS"
         IFS=$'\n'
-        for i in $(find -L ${softLinkDir} -type f -iname '*~')
+        for i in $(find -L "${softLinkDir}" -type f -iname '*~')
         do            
             filename=$(basename "$i")
             number="${filename##*.}"
