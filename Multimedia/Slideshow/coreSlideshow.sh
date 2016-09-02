@@ -21,24 +21,24 @@ function showUsage
     echo "Usage:"
     echo "$0 [options]"
     echo "Options:"
-    echo "-h, --help:           Show this help"
-    echo "-r, --rating:         Minimum rating: e.g. -r 8 means rating>=8. The default is rating=10."
-    echo "-c, --criteria:       Criteria: e.g. -c rating=9. The default is rating=10. If you use multiple --criteria the result is logical And of all of them."
-    echo "-C, --unique-Criteria Like --criteria but don't consider --rating. In other words, you are responsible for all criteria."
-    echo "-p, --path:           Path to the root directory to show images. The default is the current directory (.)."
-    echo "                      You can choose multiple --path. In this case, The result is the union of all paths."
-    echo "-d, --delay:          Delay for slideshow. The default is 10s."
-    echo "                      Note that you can use delay when you've chosen an image viewer."
-    echo "-s, --software:       Image viewer or video player." 
-    echo "                      Supported image viewers: feh, sxiv"
-    echo "                      Note that feh unable to show multiple-frames images like most gifts. On the other hand sxiv can do that."
-    echo "                      Supported video players: mpv"
-    echo "-b, --bug [type]      Atemporary solutions for some of baloo bugs. type can be the following values"
-    echo "                      video: baloo doesn't recognize some vide types like wmv. Use this to temporary solve it."
-    echo "                      rating: baloo doesn't handle >= or <= correctly. It only handle = correctly. Use this to solve it."
-    echo "-i, --input           Read the list of files from images.txt or movies.txt depends on the software. See --software"
-    echo "-w, --write           Write the list of files into images.txt or movies.txt depends on the software. See --software"
-    echo "-l, --link            Generate soft links in imageSelection or moviesSelection depending on software. See --software"
+    echo "-h, --help:               Show this help"
+    echo "-r, --rating:             Minimum rating: e.g. -r 8 means rating>=8. The default is rating=10."
+    echo "-c, --criteria:           Criteria: e.g. -c rating=9. The default is rating=10. If you use multiple --criteria the result is logical And of all of them."
+    echo "-C, --unique-Criteria     Like --criteria but don't consider --rating. In other words, you are responsible for all criteria."
+    echo "-p, --path:               Path to the root directory to show images. The default is the current directory (.)."
+    echo "                          You can choose multiple --path. In this case, The result is the union of all paths."
+    echo "-d, --delay:              Delay for slideshow. The default is 10s."
+    echo "                          Note that you can use delay when you've chosen an image viewer."
+    echo "-s, --software:           Image viewer or video player." 
+    echo "                          Supported image viewers: feh, sxiv"
+    echo "                          Note that feh unable to show multiple-frames images like most gifts. On the other hand sxiv can do that."
+    echo "                          Supported video players: mpv"
+    echo "-b, --bug [type]          Atemporary solutions for some of baloo bugs. type can be the following values"
+    echo "                          video: baloo doesn't recognize some vide types like wmv. Use this to temporary solve it."
+    echo "                          rating: baloo doesn't handle >= or <= correctly. It only handle = correctly. Use this to solve it."
+    echo "-i, --input               Read the list of files from images.txt or movies.txt depends on the software. See --software"
+    echo "-w, --write               Write the list of files into images.txt or movies.txt depends on the software. See --software"
+    echo "-l, --link [directory]    Generate soft links in directory"
     exit 0
 }
 
@@ -131,7 +131,8 @@ do
             ;;
         -l|--link)
             linkFiles="1"
-            shift
+            softLinkDir="$2"
+            shift 2
             ;;
         *)
             showUsage
@@ -264,11 +265,11 @@ function checkGeneratingSoftLinks
             echo "Problem in making $softLinkDir. I don't have write permission or directory exist"
             exit 1
         fi
-        #eval $balooCommand | tr '\n' '\0' | xargs -0 realpath --relative-to="`pwd`/${softLinkDir}" | tr '\n' '\0' | xargs -0 -I target ln -s target ./${softLinkDir}
-        eval $balooCommand | tr '\n' '\0' | xargs -0 ln -s -r --backup=numbered -t ./${softLinkDir}
+        #eval $balooCommand | tr '\n' '\0' | xargs -0 realpath --relative-to="`pwd`${softLinkDir}" | tr '\n' '\0' | xargs -0 -I target ln -s target ${softLinkDir}
+        eval $balooCommand | tr '\n' '\0' | xargs -0 ln -s -r --backup=numbered -t ${softLinkDir}
         oldIFS="$IFS"
         IFS=$'\n'
-        for i in $(find -L ./${softLinkDir} -type f -iname '*~')
+        for i in $(find -L ${softLinkDir} -type f -iname '*~')
         do            
             filename=$(basename "$i")
             number="${filename##*.}"
@@ -277,7 +278,7 @@ function checkGeneratingSoftLinks
             extension="${filename##*.}"
             filename="${filename%.*}"
             filename="${filename}-${number}.${extension}"            
-            mv "$i" "./${softLinkDir}/$filename"
+            mv "$i" "${softLinkDir}/$filename"
         done
         IFS="$oldIFS"        
         exit 0
