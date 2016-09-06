@@ -169,29 +169,33 @@ function runMpvAndHandlBalooVideoBug
 
 function setCriteira
 {
-    if [ "$criteria" != "" ]
+    if [ "${rating}" -ne 0 ]
     then
-        criteria="(${criteria}) AND ("
-    else
-        criteria="("
+        if [ "$criteria" != "" ]
+        then
+            criteria="(${criteria}) AND ("
+        else
+            criteria="("
+        fi
+        if [ $balooBug -eq 1 ] && [ "$balooBugType" = "rating" ]
+        then    
+            local first=1
+            for (( i=${rating}; i<=10; i++ ))
+            do
+                if [ $first -eq 1 ]
+                then
+                    first=0
+                else
+                    criteria="$criteria OR "
+                fi
+                criteria="${criteria}rating=${i}"
+            done
+            criteria="${criteria})"
+        else
+            criteria="${criteria}rating>=${rating})"
+        fi
     fi
-    if [ $balooBug -eq 1 ] && [ "$balooBugType" = "rating" ]
-    then    
-        local first=1
-        for (( i=${rating}; i<=10; i++ ))
-        do
-            if [ $first -eq 1 ]
-            then
-                first=0
-            else
-                criteria="$criteria OR "
-            fi
-            criteria="${criteria}rating=${i}"
-        done
-        criteria="${criteria})"
-    else
-        criteria="${criteria}rating>=${rating})"
-    fi
+    echo "criteria: \"${criteria}\""
 }
 
 function runMpv
