@@ -15,6 +15,7 @@ softLinkDir="imageSelection"
 fileList="images.txt"
 customCriteria=0
 uniqueCriteria=0
+verboseOutput="0"
 
 function showUsage
 {
@@ -39,6 +40,7 @@ function showUsage
     echo "-i, --input               Read the list of files from images.txt or movies.txt depends on the software. See --software"
     echo "-w, --write               Write the list of files into images.txt or movies.txt depends on the software. See --software"
     echo "-l, --link [directory]    Generate soft links in directory"
+    echo "-v, --verbose             Show more information"
     exit 0
 }
 
@@ -134,6 +136,10 @@ do
             softLinkDir="$2"
             shift 2
             ;;
+        -v|--verbose)
+            verboseOutput="1"
+            shift
+            ;;
         *)
             showUsage
             ;;
@@ -195,7 +201,10 @@ function setCriteira
             criteria="${criteria}rating>=${rating})"
         fi
     fi
-    echo "criteria: \"${criteria}\""
+    if [ "$verboseOutput" = "1" ]
+    then
+        echo "criteria: \"${criteria}\""
+    fi
 }
 
 function runMpv
