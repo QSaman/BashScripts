@@ -8,6 +8,7 @@ rating="10"
 viewerName="feh"
 balooBug="0"
 writeFile="0"
+hasPlaylist="0"
 linkFiles="0"
 readFile="0"
 slideshowType="image"
@@ -26,7 +27,7 @@ function showUsage
     echo "-r, --rating:             Minimum rating: e.g. -r 8 means rating>=8. The default is rating=10."
     echo "-c, --criteria:           Criteria: e.g. -c rating=9. The default is rating=10. If you use multiple --criteria the result is logical And of all of them."
     echo "-C, --unique-Criteria     Like --criteria but don't consider --rating. In other words, you are responsible for all criteria."
-    echo "-p, --path:               Path to the root directory to show images. The default is the current directory (.)."
+    echo "-P, --path:               Path to the root directory to show images. The default is the current directory (.)."
     echo "                          You can choose multiple --path. In this case, The result is the union of all paths."
     echo "-d, --delay:              Delay for slideshow. The default is 10s."
     echo "                          Note that you can use delay when you've chosen an image viewer."
@@ -37,8 +38,9 @@ function showUsage
     echo "-b, --bug [type]          Atemporary solutions for some of baloo bugs. type can be the following values"
     echo "                          video: baloo doesn't recognize some vide types like wmv. Use this to temporary solve it."
     echo "                          rating: baloo doesn't handle >= or <= correctly. It only handle = correctly. Use this to solve it."
-    echo "-i, --input               Read the list of files from images.txt or movies.txt depends on the software. See --software"
+    echo "-i, --input               Read the list of files from images.txt or movies.txt depends on the software. See --software"    
     echo "-w, --write               Write the list of files into images.txt or movies.txt depends on the software. See --software"
+    echo "-p f, --playlist f        Generate a playlist to file f."
     echo "-l, --link [directory]    Generate soft links in directory"
     echo "-v, --verbose             Show more information"
     exit 0
@@ -83,7 +85,7 @@ do
             fi
             shift 2
             ;;
-        -p|--path)
+        -P|--path)
             dirPath=("${dirPath[@]}" "$2")
             if [ "$2" = "" ]
             then
@@ -108,7 +110,10 @@ do
             if [ "$viewerName" = "mpv" ]
             then
                 slideshowType="video"
-                fileList="movies.txt"
+                if [ "$hasPlaylist" = "0" ]
+                then
+                    fileList="movies.txt"
+                fi
                 softLinkDir="moviesSelection"
             fi
             shift 2
@@ -130,6 +135,15 @@ do
         -w|--write)
             writeFile="1"
             shift
+            ;;
+        -p|--playlist)
+            hasPlaylist="1"
+            fileList="$2"
+            if [ "$fileList" = "" ]
+            then
+                showUsage
+            fi
+            shift 2
             ;;
         -l|--link)
             linkFiles="1"
@@ -264,6 +278,10 @@ function checkGenerateFileList
         #You can also use the following command but the former is prefered:
         #eval $balooCommand | xargs -d '\n' realpath --relative-to="`pwd`" > "$fileList"
         eval $balooCommand | tr '\n' '\0' | xargs -0 realpath --relative-to="`pwd`" > "$fileList"
+        exit 0
+    elif [ $hasPlaylist -eq 1 ]
+    then
+        eval $balooCommand > "$fileList"
         exit 0
     fi
 }
