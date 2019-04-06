@@ -14,6 +14,7 @@ readFile="0"
 slideshowType="image"
 softLinkDir="imageSelection"
 fileList="images.txt"
+modifyFilelist="1"
 customCriteria=0
 uniqueCriteria=0
 verboseOutput="0"
@@ -38,7 +39,7 @@ function showUsage
     echo "-b, --bug [type]          Atemporary solutions for some of baloo bugs. type can be the following values"
     echo "                          video: baloo doesn't recognize some vide types like wmv. Use this to temporary solve it."
     echo "                          rating: baloo doesn't handle >= or <= correctly. It only handle = correctly. Use this to solve it."
-    echo "-i, --input               Read the list of files from images.txt or movies.txt depends on the software. See --software"    
+    echo "-i [f], --input [f]       Read the list of files from f in the argument. If no argument is presented it reads from images.txt or movies.txt depends on the software. See --software."    
     echo "-w, --write               Write the list of files into images.txt or movies.txt depends on the software. See --software"
     echo "-p f, --playlist f        Generate a playlist to file f."
     echo "-l, --link [directory]    Generate soft links in directory"
@@ -110,7 +111,7 @@ do
             if [ "$viewerName" = "mpv" ]
             then
                 slideshowType="video"
-                if [ "$hasPlaylist" = "0" ]
+                if [ "$modifyFilelist" = "1" ]
                 then
                     fileList="movies.txt"
                 fi
@@ -130,7 +131,14 @@ do
             ;;
         -i|--input)
             readFile="1"
-            shift
+            if [ "$2" != "" ]
+            then
+                modifyFilelist="0"
+                fileList="$2"
+                shift 2
+            else
+                shift
+            fi
             ;;
         -w|--write)
             writeFile="1"
@@ -138,6 +146,7 @@ do
             ;;
         -p|--playlist)
             hasPlaylist="1"
+            modifyFileList="0"
             fileList="$2"
             if [ "$fileList" = "" ]
             then
@@ -235,7 +244,7 @@ function mpvHandler
 {
     if [ $readFile -eq 1 ]
     then
-        mpv --shuffle --playlist=movies.txt
+        mpv --shuffle --playlist="$fileList"
         exit 0
     fi
     
@@ -251,7 +260,7 @@ function sxivHandler
 {
     if [ $readFile -eq 1 ]
     then
-        cat images.txt | sort --random-sort | sxiv -a -b -f -i -S $delay -sf
+        cat "$fileList" | sort --random-sort | sxiv -a -b -f -i -S $delay -sf
         exit 0
     fi
     eval $balooCommand | sort --random-sort | sxiv -a -b -f -i -S $delay -sf
@@ -261,7 +270,7 @@ function fehHandler
 {
     if [ $readFile -eq 1 ]
     then
-        feh -F -D $delay -Z -z -Y -f images.txt
+        feh -F -D $delay -Z -z -Y -f "$fileList"
         exit 0
     fi
 
